@@ -1,10 +1,19 @@
 import Head from "next/head";
 import Link from "next/link";
+import getConfig from "next/config";
 import { Button, DatePicker, version } from "antd";
+import { END } from "redux-saga";
 
-import styles from './index.module.scss';
+import { SagaStore, wrapper } from "store";
 
-export default function Home() {
+import styles from "./index.module.scss";
+import { fetchPostsAction } from "store/ui/posts/actions";
+
+const {
+  publicRuntimeConfig: { NEXT_PUBLIC_TEST },
+} = getConfig();
+
+function Home() {
   return (
     <div className={styles.wrapper}>
       <Head>
@@ -14,6 +23,7 @@ export default function Home() {
       <h1>This is a home page</h1>
       <div className={styles.ant}>
         <p>antd version: {version}</p>
+        <p>test value from .env: {NEXT_PUBLIC_TEST}</p>
         <DatePicker />
         <Button type="primary" style={{ marginLeft: 8 }}>
           Primary Button
@@ -25,3 +35,15 @@ export default function Home() {
     </div>
   );
 }
+
+export const getServerSideProps = wrapper.getServerSideProps(
+  async ({ store }) => {
+
+    store.dispatch(fetchPostsAction.request());
+
+    store.dispatch(END);
+    await (store as SagaStore).sagaTask!.toPromise();
+  }
+);
+
+export default Home;
